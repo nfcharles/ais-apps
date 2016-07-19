@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 BUILD_VERSION=0.1.0
-AIS_LIB_VER=0.8.3
 
 USAGE="
 Usage: ais-decode [options] INPUT MESSAGES OUTPUT-NAME
@@ -43,7 +42,6 @@ JAVA_OPTS_INIT_HEAP=-Xms2048m
 JAVA_OPTS_MAX_HEAP=-Xmx4096m
 JAVA_OPTS="$JAVA_OPTS_INIT_HEAP $JAVA_OPTS_MAX_HEAP"
 RELEASE_JAR=target/uberjar/ais-apps-$BUILD_VERSION-SNAPSHOT-standalone.jar
-AIS_LIB_JARS="resources/ais-$AIS_LIB_VER-SNAPSHOT-standalone.jar;resources/ais-$AIS_LIB_VER-SNAPSHOT.jar"
 
 # Application parameters
 OUTPUT_FORMAT=json
@@ -88,7 +86,6 @@ if [ -z $OUTPUT_NAME ]; then
     exit 1
 fi
 
-echo "AIS_LIB_VER=$AIS_LIB_VER"
 echo "JAVA_OPTS=$JAVA_OPTS"
 echo "RELEASE_JAR=$RELEASE_JAR"
 echo "INPUT=$INPUT"
@@ -97,7 +94,7 @@ echo "THREADS=$THREADS"
 echo "OUTPUT_FORMAT=$OUTPUT_FORMAT"
 echo "OUTPUT_NAME=$OUTPUT_NAME"
 
-java $JAVA_OPS -cp ".;$AIS_LIB_JARS" -jar $RELEASE_JAR \
+java $JAVA_OPS -jar $RELEASE_JAR \
     $OUTPUT_NAME \
     $MESSAGE_TYPES \
     $THREADS \
