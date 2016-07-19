@@ -1,0 +1,17 @@
+#! /bin/bash
+
+if [ -z $TYPES ]; then
+    TYPES=1,2,3,5,18,24
+    echo "TYPES empty, default to $TYPES"
+fi
+
+SUFFIX=$(echo $TYPES | tr "," "-")
+OUTPUT=sample-$SUFFIX
+
+bin/ais-decode \
+    --threads 2 \
+    --output-format json \
+    input/nmea-sample \
+    $TYPES \
+    $OUTPUT
+    

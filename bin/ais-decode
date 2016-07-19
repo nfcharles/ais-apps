@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+
+BUILD_VERSION=0.1.0
+AIS_LIB_VER=0.8.3
+
+USAGE="
+Usage: ais-decode [options] INPUT MESSAGES OUTPUT-NAME
+
+Description:
+  Decodes ais sentences from input source.  At least 1 message type must be specified.
+
+  e.g.
+    ais-decode --output-format csv
+               --threads 3
+               /tmp/sample-input.txt
+               1,2,3,4,5
+               output
+
+  The prior command generates a file named output.csv in cwd with decoded ais sentences
+  of type 1,2,3,4,5, using 3 threads to decode the sentences.
+
+    
+Options:
+ -o, --output-format <format> Output file format: 'csv' or 'json'
+ -t, --threads <int>          Total count of decoding threads.
+ -h, --help                   Show help.
+
+Required:
+ INPUT        Path to input file.
+ MESSAGES     Comma separated list of message types.  For example, 1,5 decodes ais message
+              types 1 and 5.
+ OUTPUT-NAME  Output filename
+"
+
+if [[ $1 == "--help" || $1 == "-h" ]]; then
+    echo -e "$USAGE"
+    exit
+fi
+
+
+# Java parameters
+JAVA_OPTS_INIT_HEAP=-Xms2048m
+JAVA_OPTS_MAX_HEAP=-Xmx4096m
+JAVA_OPTS="$JAVA_OPTS_INIT_HEAP $JAVA_OPTS_MAX_HEAP"
+RELEASE_JAR=target/uberjar/ais-apps-$BUILD_VERSION-SNAPSHOT-standalone.jar
+AIS_LIB_JARS="resources/ais-$AIS_LIB_VER-SNAPSHOT-standalone.jar;resources/ais-$AIS_LIB_VER-SNAPSHOT.jar"
+
+# Application parameters
+OUTPUT_FORMAT=json
+THREADS=1
+
+while [[ $# > 3 ]]; do
+    key="$1"
+    
+    case $key in
+	-o|--output-format)
+	    OUTPUT_FORMAT="$2"
+	    shift
+	    ;;
+	-t|--threads)
+	    THREADS="$2"
+	    shift 
+	    ;;
+	*)
+            # unknown option
+	    ;;
+    esac
+    shift 
+done
+
+# Required parameters
+INPUT=$1
+MESSAGE_TYPES=$2
+OUTPUT_NAME=$3
+
+if [ -z $INPUT ]; then
+    echo "$USAGE"
+    exit 1
+fi
+
+if [ -z $MESSAGE_TYPES ]; then
+    echo "$USAGE"
+    exit 1
+fi
+
+if [ -z $OUTPUT_NAME ]; then
+    echo "$USAGE"
+    exit 1
+fi
+
+echo "AIS_LIB_VER=$AIS_LIB_VER"
+echo "JAVA_OPTS=$JAVA_OPTS"
+echo "RELEASE_JAR=$RELEASE_JAR"
+echo "INPUT=$INPUT"
+echo "MESSAGE_TYPES=$MESSAGE_TYPES"
+echo "THREADS=$THREADS"
+echo "OUTPUT_FORMAT=$OUTPUT_FORMAT"
+echo "OUTPUT_NAME=$OUTPUT_NAME"
+
+java $JAVA_OPS -cp ".;$AIS_LIB_JARS" -jar $RELEASE_JAR \
+    $OUTPUT_NAME \
+    $MESSAGE_TYPES \
+    $THREADS \
+    $OUTPUT_FORMAT < $INPUT
