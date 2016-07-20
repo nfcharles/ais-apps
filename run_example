@@ -6,10 +6,11 @@ if [ -z $TYPES ]; then
 fi
 
 SUFFIX=$(echo $TYPES | tr "," "-")
-OUTPUT=sample-$SUFFIX
+OUTDIR=output
+OUTPUT=$OUTDIR/sample-$SUFFIX
 
 bin/ais-decode \
-    --threads 2 \
+    --threads 3 \
     --output-format json \
     input/nmea-sample \
     $TYPES \

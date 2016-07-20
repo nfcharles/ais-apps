@@ -8,5 +8,6 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 /input
+/output
 /maven_repository
 /libs
