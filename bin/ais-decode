@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BUILD_VERSION=0.2.0
+BUILD_VERSION=0.3.0
 
 USAGE="
 Usage: ais-decode [options] INPUT MESSAGES OUTPUT-NAME
@@ -12,6 +12,7 @@ Description:
     ais-decode --output-format csv
                --threads 3
                --buffer-len 75000
+               --input-stream file
                /tmp/sample-input.txt
                1,2,3,4,5
                output
@@ -24,6 +25,7 @@ Options:
  -o, --output-format <format> Output file format: 'csv' or 'json'
  -t, --threads <int>          Total count of decoding threads.
  -b, --buffer-len <int>       Max count of messages in each output file
+ -i, --input-stream <string>  Source of input messages [file | stdin]
  -h, --help                   Show help.
 
 Required:
@@ -49,6 +51,7 @@ RELEASE_JAR=target/uberjar/ais-apps-$BUILD_VERSION-SNAPSHOT-standalone.jar
 OUTPUT_FORMAT=json
 THREADS=1
 BUFFER_LEN=50000
+INPUT_STREAM=file
 
 while [[ $# > 3 ]]; do
     key="$1"
@@ -64,6 +67,10 @@ while [[ $# > 3 ]]; do
 	    ;;
 	-b|--buffer-len)
 	    BUFFER_LEN="$2"
+	    shift
+	    ;;
+	-i|--input-stream)
+	    INPUT_STREAM="$2"
 	    shift
 	    ;;
 	*)
@@ -101,10 +108,13 @@ echo "THREADS=$THREADS"
 echo "OUTPUT_FORMAT=$OUTPUT_FORMAT"
 echo "OUTPUT_NAME=$OUTPUT_NAME"
 echo "BUFFER_LEN=$BUFFER_LEN"
+echo "INPUT_STREAM=$INPUT_STREAM"
 
 java $JAVA_OPS -jar $RELEASE_JAR \
-    $OUTPUT_NAME \
-    $MESSAGE_TYPES \
-    $THREADS \
-    $OUTPUT_FORMAT \
-    $BUFFER_LEN < $INPUT
+     $INPUT_STREAM \
+     $OUTPUT_NAME \
+     $MESSAGE_TYPES \
+     $THREADS \
+     $OUTPUT_FORMAT \
+     $BUFFER_LEN \
+     $INPUT
