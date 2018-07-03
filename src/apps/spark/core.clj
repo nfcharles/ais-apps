@@ -23,6 +23,10 @@
 	   ;[com.amazonaws.services.s3 S3CredentialsProviderChain])
   (:gen-class))
 
+
+
+(def delimiter #"[\s]+")
+
 ;; --------------
 ;; -    UTIL    -
 ;; --------------
@@ -64,6 +68,7 @@
 ;; ----------------
 
 (defn tokenize [msgs]
+  #_(println (format "Tokenizing=%s" msgs))
   (loop [xs msgs
          acc []]
     (if-let [msg (first xs)]
@@ -75,6 +80,13 @@
     (string/split line #"\|")
     [line]))
 
+(defn preprocess [line & {:keys [delim]
+                          :or {delim delimiter}}]
+  (if (re-find delim line)
+    (string/split line delim)
+    [line]))
+
+
 (defn printthru [label x]
   (if (nil? x)
     (println (format "DEBUG[%s]: <<<<<<<<<< NIL >>>>>>>>>>" label))
@@ -82,10 +94,10 @@
       (println (format "DEBUG[%s]: (%s)" label x))
       x)))
 
-(defn process [line]
-  (->> (preprocess line)
+(defn process [delim line]
+  (->> (preprocess line :delim delim)
        (tokenize)
-       (printthru "After 'tokenize'")       
+       #_(printthru "After 'tokenize'")
        (ais-core/parse "json")
        (json/write-str)))
 
@@ -93,16 +105,18 @@
   (->> (preprocess line)
        (count)))
 
-(defn decode-ais [sc rdds]
-  (loop [xs rdds
-         acc []]
-    (if-let [rdd (first xs)]
-      (recur (rest xs) (conj acc (spark/map process rdd)))
-      acc)))
+(defn decode-ais [sc delim rdds]
+  (let [-process (partial process delim)]
+    (loop [xs rdds
+           acc []]
+      (if-let [rdd (first xs)]
+        (recur (rest xs) (conj acc (spark/map -process rdd)))
+        acc))))
 
-(defn run [sc output sources]
-  (let [rdds (->> (apply load->rdd sc sources)
-                  (decode-ais sc))]
+(defn run [sc delim output sources]
+  (let [d (re-pattern delim)
+        rdds (->> (apply load->rdd sc sources)
+                  (decode-ais sc d))]
     (loop [xs rdds
            i 0]
       (if-let [rdd (first xs)]
@@ -118,7 +132,11 @@
 
 (defn -main
   [& args]
-  (let [sc (apps-config/spark-context :master "local[2]")]
-    (println (format "INPUT=%s" (apps-config/get-input)))
-    (println (format "OUTPUT=%s" (apps-config/get-output)))  
-    (run sc (apps-config/get-output) (get-sources (apps-config/get-input)))))
+  (let [sc    (apps-config/spark-context :master "local[2]")
+        in    (apps-config/get-input)
+        out   (apps-config/get-output)
+        delim (apps-config/get-delimiter)]
+    (println (format "INPUT_SOURCE=%s" in))
+    (println (format "OUTPUT_DEST=%s" out))
+    (println (format "DELIMITER=%s" delim))
+    (run sc delim out (get-sources in))))

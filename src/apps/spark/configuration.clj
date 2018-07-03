@@ -15,10 +15,13 @@
   (System/getenv k))
 
 (defn get-input []
-  (get-env "INPUT_SOURCE"))
+  (get-env "AIS_INPUT_SOURCE"))
 
 (defn get-output []
-  (get-env "OUTPUT_DEST"))
+  (get-env "AIS_OUTPUT_DEST"))
+
+(defn get-delimiter []
+  (get-env "AIS_MULTIPART_DELIMITER_REGEX"))
 
 (defn set-hadoop [ctx k v]
   (println (format "setting key[%s]" k))
@@ -37,7 +40,7 @@
   (configure-common ctx))
 
 (defn ^JavaSparkContext spark-context [& {:keys [app-name master]
-                                          :or {app-name "ais"
+                                          :or {app-name "ais-decoder"
                                                master   "local[*]"}}]
   (println (format "SPARK_MASTER=%s" master))
   (println (format "SPARK_APP_NAME=%s" app-name))
